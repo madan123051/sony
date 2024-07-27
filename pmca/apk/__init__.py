@@ -1,4 +1,4 @@
-from axmlparserpy.axmlprinter import AXMLPrinter
+from pyaxmlparser.axmlprinter import AXMLPrinter
 from asn1crypto.cms import ContentInfo
 from xml.dom import minidom
 from zipfile import ZipFile
