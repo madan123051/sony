@@ -19,6 +19,7 @@ from ..platform.backend.senser import *
 from ..platform.backend.usb import *
 from ..usb import *
 from ..usb.driver import *
+from ..i18n import _
 from ..usb.driver.generic import *
 from ..usb.sony import *
 from ..util import http
@@ -37,9 +38,9 @@ def listApps(enableCache=False):
  appStoreRepo = appstore.GithubApi(config.githubAppListUser, config.githubAppListRepo)
 
  if not appListCache or not enableCache:
-  print('Loading app list')
+  print(_('loading_app_list'))
   apps = appstore.AppStore(appStoreRepo).apps
-  print('Found %d apps' % len(apps))
+  print(_('found_apps', count=len(apps)))
   appListCache = apps
  return appListCache
 
@@ -52,23 +53,23 @@ def installApp(dev, apkFile=None, appPackage=None, outFile=None):
   if apkFile:
    apkData = apkFile.read()
   elif appPackage:
-   print('Downloading apk')
+   print(_('downloading_apk'))
    apps = listApps(True)
    if appPackage not in apps:
     raise Exception('Unknown app: %s' % appPackage)
    apkData = apps[appPackage].release.asset
 
   if apkData:
-   print('Analyzing apk')
+   print(_('analyzing_apk'))
    print('')
    checkApk(io.BytesIO(apkData))
    print('')
    server.setApk(apkData)
 
-  print('Starting task')
+  print(_('starting_task'))
   xpdData = server.getXpd()
 
-  print('Starting communication')
+  print(_('starting_communication'))
   # Point the camera to the web api
   result = installer.install(SonyAppInstallCamera(dev), *server.server_address, xpdData, printStatus)
   if result.code != 0:
@@ -76,10 +77,10 @@ def installApp(dev, apkFile=None, appPackage=None, outFile=None):
 
   result = server.getResult()
 
-  print('Task completed successfully')
+  print(_('task_completed'))
 
   if outFile:
-   print('Writing to output file')
+   print(_('writing_output'))
    json.dump(result, outFile, indent=2)
 
   return result
@@ -99,15 +100,15 @@ def checkApk(apkFile):
 
   sdk = apk.getMinSdkVersion()
   if sdk > 10:
-   print('Warning: This app might not be compatible with the device (minSdkVersion = %d)' % sdk)
+   print(_('warning_compatibility', sdk=sdk))
 
   try:
    apk.getCert()
   except:
-   print('Warning: Cannot read apk certificate')
+   print(_('warning_certificate'))
 
  except:
-  print('Warning: Invalid apk file')
+  print(_('warning_invalid_apk'))
 
 
 class UsbDriverList(contextlib.AbstractContextManager):
@@ -150,9 +151,9 @@ def importDriver(driverName=None):
    if isMscDriverAvailable():
     from ..usb.driver.osx import MscContext
    else:
-    print('Native driver not installed')
+    print(_('native_driver_not_installed'))
   else:
-   print('No native drivers available')
+   print(_('no_native_drivers'))
  elif driverName == 'qemu':
   from ..usb.driver.generic.qemu import MscContext
   from ..usb.driver.generic.qemu import MtpContext
@@ -168,29 +169,29 @@ def importDriver(driverName=None):
   from ..usb.driver.generic.libusb import VendorSpecificContext as VendorSpecificContext2
 
  drivers = [context() for context in [MscContext, MtpContext, VendorSpecificContext, MscContext2, MtpContext2, VendorSpecificContext2] if context]
- print('Using drivers %s' % ', '.join(d.name for d in drivers))
+ print(_('using_drivers', drivers=', '.join(d.name for d in drivers)))
  return UsbDriverList(*drivers)
 
 
 def listDevices(driverList, quiet=False):
  """List all Sony usb devices"""
  if not quiet:
-  print('Looking for Sony devices')
+  print(_('looking_for_devices'))
  for dev, type, drv in driverList.listDevices(SONY_ID_VENDOR):
   if type == USB_CLASS_MSC:
    if not quiet:
-    print('\nQuerying mass storage device')
+    print(_('querying_mass_storage'))
    # Get device info
    info = MscDevice(drv).getDeviceInfo()
 
    if isSonyMscCamera(info):
     if isSonyMscUpdaterCamera(dev):
      if not quiet:
-      print('%s %s is a camera in updater mode' % (info.manufacturer, info.model))
+      print(_('camera_updater_mode', manufacturer=info.manufacturer, model=info.model))
      yield SonyMscUpdaterDevice(drv)
     else:
      if not quiet:
-      print('%s %s is a camera in mass storage mode' % (info.manufacturer, info.model))
+      print(_('camera_mass_storage_mode', manufacturer=info.manufacturer, model=info.model))
      yield SonyMscExtCmdDevice(drv)
 
   elif type == USB_CLASS_PTP:
@@ -221,9 +222,9 @@ def getDevice(driver):
  """Check for exactly one Sony usb device"""
  devices = list(listDevices(driver))
  if not devices:
-  print('No devices found. Please make sure that the camera is connected.')
+  print(_('no_devices_found'))
  elif len(devices) != 1:
-  print('Error: Too many Sony devices found. Only one camera is supported.')
+  print(_('too_many_devices'))
  else:
   return devices[0]
 

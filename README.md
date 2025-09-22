@@ -22,9 +22,9 @@ The application uses Python 3 and should work fine on Linux using libusb drivers
 
 Clone or download this repository, then run the following commands:
 ```bash
-pip install -r requirements.txt  # to install the dependencies
-./pmca-console.py  # for the command line application
-./pmca-gui.py  # for the gui application
+uv sync  # to install the dependencies
+uv run pmca-console.py  # for the command line application
+uv run pmca-gui.py  # for the gui application
 ```
 
 ## Usage
