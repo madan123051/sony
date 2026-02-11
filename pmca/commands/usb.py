@@ -160,11 +160,11 @@ def importDriver(driverName=None):
   raise Exception('Unknown driver')
 
  # Fallback to libusb
- if MscContext is None or (driverName is None and sys.platform == 'win32'):
+ if MscContext is None or (driverName is None and sys.platform in ('win32', 'darwin')):
   from ..usb.driver.generic.libusb import MscContext as MscContext2
- if MtpContext is None or (driverName is None and sys.platform == 'win32'):
+ if MtpContext is None or (driverName is None and sys.platform in ('win32', 'darwin')):
   from ..usb.driver.generic.libusb import MtpContext as MtpContext2
- if (VendorSpecificContext is None and driverName != 'qemu') or (driverName is None and sys.platform == 'win32'):
+ if (VendorSpecificContext is None and driverName != 'qemu') or (driverName is None and sys.platform in ('win32', 'darwin')):
   from ..usb.driver.generic.libusb import VendorSpecificContext as VendorSpecificContext2
 
  drivers = [context() for context in [MscContext, MtpContext, VendorSpecificContext, MscContext2, MtpContext2, VendorSpecificContext2] if context]
