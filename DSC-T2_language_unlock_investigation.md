@@ -344,3 +344,46 @@ python .\pmca-console.py updatershell -d native *>&1 | Tee-Object -FilePath .\lo
 ### 実務判断
 - 今回の `NoBackendError` は「T2非対応の本質原因」ではなく、**PC側のlibusb実行環境不足**。
 - まず `--driver windows` で再実行して、以前の本質エラー（Sense `0x5 0x20 0x0`）再現有無を確認する。
+
+## 追記7: 2026-05-15 実機再検証ログ要約（native固定）
+
+### 実行条件
+- OS: Windows + PowerShell
+- Python: `.venv` 有効
+- ドライバ指定: `-d native`
+- 目的: libusb環境差分を排除し、PMCA標準導線の実機応答を確認
+
+### 観測結果（MSC接続時）
+1. `python .\pmca-console.py info -d native`
+   - `Sony DSC is a camera in mass storage mode` までは到達
+   - その後 `pmca.usb.InvalidCommandException: Mass storage error: Sense 0x5 0x20 0x0`
+2. `python .\pmca-console.py updatershell -d native`
+   - `Sony DSC is a camera in mass storage mode` までは到達
+   - `Getting device info` の後に `Error: Cannot determine camera model`
+
+### 観測結果（PictBridge接続時）
+1. `python .\pmca-console.py info -d native`
+   - `Querying MTP device`
+   - `No devices found. Please make sure that the camera is connected.`
+2. `python .\pmca-console.py updatershell -d native`
+   - `Querying MTP device`
+   - `No devices found. Please make sure that the camera is connected.`
+3. `python .\pmca-console.py updatershell -d native -m DSC-T2`
+   - 上記同様にMTPデバイス未検出で停止（モデル指定処理まで未到達）
+
+### 補助情報（PnPデバイス一覧）
+- `Get-PnpDevice` で Sony関連は列挙されるが、`WPD` / `DiskDrive` の複数エントリに `Unknown` が混在。
+- 例: `USB\VID_054C&PID_02F8`, `USB\VID_054C&PID_07C3` など。
+- 解釈: Sonyとしては認識されるが、MTP/WPD経路が安定列挙できていない可能性。
+
+### ここまでの暫定結論
+- 依存不足・libusbバックエンド不足は切り分け済み（`-d native` で回避）。
+- その上で、DSC-T2に対するPMCA標準導線は以下の状態:
+  - MSC拡張経路: `Sense 0x5 0x20 0x0` / モデル判定失敗
+  - MTP(PictBridge)経路: PMCA側でデバイス未検出
+- 従って現時点では、**標準PMCA導線でT2にlanguage tweakを適用できる状態にはない**。
+
+### 次アクション（非破壊・優先）
+1. Windowsデバイス認識のクリーンアップ（WPD/Portable Devicesの再列挙）。
+2. MSC試行回とPictBridge試行回を完全分離して再測定（毎回USB再接続）。
+3. 必要に応じてUSBPcap + Wiresharkで列挙フェーズを採取し、MTP未検出要因を特定。
