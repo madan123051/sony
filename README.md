@@ -51,8 +51,6 @@ A list of supported camera models can be found [here](https://openmemories.readt
 There are two ways to use this:
 * **pmca-gui**: In the *Tweaks* tab, click *Start tweaking (updater mode)*. You can then use the checkboxes to configure your camera's settings.
 * **pmca-console**: Run `pmca-console updatershell`. There are commands available to dump the firmware, execute Linux commands, and to tweak settings.
-* **pmca-console automated tweaks**: Run `pmca-console tweak --list` to see supported tweaks for the connected camera, or `pmca-console tweak --all` to enable every available tweak without opening the interactive shell. You can also apply individual changes with commands like `pmca-console tweak --enable recLimit --enable language` or `pmca-console tweak --disable palNtscSelector`.
-* **pmca-console language unlock**: Run `pmca-console unlock_languages` to enable all menu languages through service mode. This command defaults to the `libusb` driver and only changes the language setting. Use `pmca-console unlock_languages --yes` to skip the confirmation prompt.
 
 Note that this requires rebooting the camera to firmware update mode. You will be guided through this process.
 
@@ -63,8 +61,6 @@ Service mode has the best camera compatibility, but requires custom USB drivers.
 
 It is currently only supported in the command line application:
 * **pmca-console**: Run `pmca-console serviceshell`. There are commands available to dump the firmware and to execute Linux commands.
-* **pmca-console automated tweaks**: Run `pmca-console tweak --mode service --list` or `pmca-console tweak --mode service --all` to use service mode for non-interactive tweaking.
-* **pmca-console language unlock**: Run `pmca-console unlock_languages` for a shorter service-mode workflow that only enables all languages. If the command prints `Cannot overwrite backup`, power-cycle the camera and run the command again to verify the language tweak status.
 
 #### Windows Drivers
 To use service mode on Windows, custom drivers have to be installed using [Zadig](http://zadig.akeo.ie/):
